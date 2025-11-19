@@ -1,11 +1,12 @@
-type PageProps = {};
+import { auth } from '@/lib/auth';
 
-function Page({}: PageProps) {
+export default async function DashboardPage() {
+	const session = await auth();
+
 	return (
-		<div className="flex items-center justify-center py-20">
-			<p className="text-gray-500">Page compo</p>
+		<div className="p-8">
+			<h1 className="text-2xl font-semibold">Welcome, {session?.user?.email}</h1>
+			<p className="text-muted-foreground">Tasks will appear below.</p>
 		</div>
 	);
 }
-
-export default Page;
