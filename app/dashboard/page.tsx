@@ -1,7 +1,7 @@
 // internal imports
 import { auth } from '@/lib/auth';
 
-export default async function DashboardPage() {
+async function DashboardPage() {
 	const session = await auth();
 
 	return (
@@ -11,3 +11,5 @@ export default async function DashboardPage() {
 		</div>
 	);
 }
+
+export default DashboardPage;
