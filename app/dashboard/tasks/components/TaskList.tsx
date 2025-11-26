@@ -1,4 +1,8 @@
-type TaskListProps = {};
+type TaskListProps = {
+	id: string;
+	title: string;
+	completed: boolean;
+};
 
 function TaskList({}: TaskListProps) {
 	return (

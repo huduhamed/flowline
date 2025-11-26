@@ -1,3 +1,4 @@
+// internal imports
 import { auth } from '@/lib/auth';
 
 export default async function DashboardPage() {
