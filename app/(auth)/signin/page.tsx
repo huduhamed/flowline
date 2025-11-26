@@ -1,16 +1,14 @@
 'use client';
 
-import { signInUser } from '../actions';
-import { useActionState } from 'react';
+// internal imports
+import { signInUser } from '@/actions/auth';
 
 function SignIn() {
-	const [_, formAction] = useActionState(signInUser, null);
-
 	return (
 		<div className="max-w-sm mx-auto mt-20">
 			<h1 className="text-xl font-semibold mb-4">Login</h1>
 
-			<form action={formAction} className="space-y-4">
+			<form action={signInUser} className="space-y-4">
 				<input
 					name="email"
 					type="email"
@@ -34,4 +32,5 @@ function SignIn() {
 		</div>
 	);
 }
+
 export default SignIn;

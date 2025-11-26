@@ -1,6 +1,6 @@
-import { signUpUser } from '../actions';
+import { signUpUser } from '@/actions/auth';
 
-export default function RegisterPage() {
+function RegisterPage() {
 	return (
 		<div className="max-w-sm mx-auto mt-20">
 			<h1 className="text-xl font-semibold mb-4">Create an account</h1>
@@ -29,3 +29,5 @@ export default function RegisterPage() {
 		</div>
 	);
 }
+
+export default RegisterPage;

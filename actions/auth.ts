@@ -1,12 +1,14 @@
 'use server';
 
-import { prisma } from '@/lib/prisma';
 import { hash } from 'bcrypt';
-import { signIn } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 
+// internal imports
+import { prisma } from '../lib/prisma';
+import { signIn } from '../lib/auth';
+
 // sign up
-export async function signUpUser(_: any, formData: FormData) {
+export async function signUpUser(formData: FormData) {
 	const email = formData.get('email') as string;
 	const password = formData.get('password') as string;
 
@@ -25,7 +27,7 @@ export async function signUpUser(_: any, formData: FormData) {
 }
 
 // login
-export async function signInUser(_: any, formData: FormData) {
+export async function signInUser(formData: FormData) {
 	const email = formData.get('email') as string;
 	const password = formData.get('password') as string;
 

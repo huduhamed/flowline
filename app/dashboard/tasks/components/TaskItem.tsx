@@ -1,4 +1,8 @@
-type TaskItemProps = {};
+type TaskItemProps = {
+	id: string;
+	title: string;
+	completed: boolean;
+};
 
 function TaskItemProps({}: TaskItemProps) {
 	return (
