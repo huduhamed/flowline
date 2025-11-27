@@ -1,41 +1,88 @@
 'use client';
 
-import type { Task, TaskStatus } from '@prisma/client';
+import { Task, TaskStatus } from '@prisma/client';
+import { useOptimistic, useTransition } from 'react';
 import { deleteTask, updateTaskStatus } from '@/actions/tasks';
 
-type Props = {
+type OptimisticTask = Task & {
+	optimistic?: boolean;
+};
+
+type TaskListProps = {
 	tasks: Task[];
 };
 
-function TaskList({ tasks }: Props) {
-	const statusValues: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE'];
+type OptimisticAction =
+	| { type: 'delete'; id: string }
+	| { type: 'update'; id: string; status: TaskStatus };
+
+function TaskList({ tasks }: TaskListProps) {
+	const [isPending, startTransition] = useTransition();
+
+	const [optimisticTasks, applyOptimistic] = useOptimistic<OptimisticTask[], OptimisticAction>(
+		tasks,
+		(state, action) => {
+			switch (action.type) {
+				case 'delete':
+					return state.filter((task) => task.id !== action.id);
+
+				case 'update':
+					return state.map((task) =>
+						task.id === action.id ? { ...task, status: action.status, optimistic: true } : task
+					);
+
+				default:
+					return state;
+			}
+		}
+	);
+
+	function handleDelete(taskId: string) {
+		startTransition(() => {
+			applyOptimistic({ type: 'delete', id: taskId });
+			deleteTask(taskId);
+		});
+	}
+
+	function handleUpdate(taskId: string, status: TaskStatus) {
+		startTransition(() => {
+			applyOptimistic({ type: 'update', id: taskId, status });
+			updateTaskStatus(taskId, status);
+		});
+	}
 
 	return (
 		<ul className="space-y-3">
-			{tasks.map((task) => (
-				<li key={task.id} className="border p-3 rounded-md flex justify-between items-center">
+			{optimisticTasks.map((task) => (
+				<li
+					key={task.id}
+					className={`border p-3 rounded flex justify-between ${
+						task.optimistic ? 'opacity-60' : ''
+					}`}
+				>
 					<div>
 						<p className="font-medium">{task.title}</p>
+
 						{task.description && <p className="text-sm text-gray-500">{task.description}</p>}
-						<p className="text-xs mt-1">{task.status}</p>
+
+						<p className="text-xs mt-1 uppercase tracking-wide">{task.status}</p>
 					</div>
 
 					<div className="flex gap-2 items-center">
-						<select
-							value={task.status}
-							onChange={(e) => updateTaskStatus(task.id, e.target.value as TaskStatus)}
-							className="border rounded px-2 py-1 text-sm"
-						>
-							{statusValues.map((status) => (
-								<option key={status} value={status}>
-									{status}
-								</option>
-							))}
-						</select>
+						{task.status !== 'DONE' && (
+							<button
+								onClick={() => handleUpdate(task.id, 'DONE')}
+								disabled={isPending}
+								className="text-sm border px-2 py-1 rounded"
+							>
+								Mark Done
+							</button>
+						)}
 
 						<button
-							onClick={() => deleteTask(task.id)}
-							className="text-sm text-red-500 hover:underline"
+							onClick={() => handleDelete(task.id)}
+							disabled={isPending}
+							className="text-sm text-red-500"
 						>
 							Delete
 						</button>

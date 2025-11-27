@@ -5,63 +5,70 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { TaskStatus } from '@prisma/client';
 
-type CreateTaskInput = {
-	title: string;
-	description?: string | null;
-};
+type ActionResult = { success: true } | { success: false; error: string };
 
-export async function createTask(input: CreateTaskInput): Promise<void> {
+// require user
+async function requireUser() {
 	const session = await auth();
 
 	if (!session?.user?.id) {
 		throw new Error('Unauthorized');
 	}
 
-	const title = input.title.trim();
+	return session.user.id;
+}
 
-	if (!title) {
-		throw new Error('Title is required');
+// create task
+export async function createTask(
+	_: ActionResult | null,
+	formData: FormData
+): Promise<ActionResult> {
+	const userId = await requireUser();
+
+	const title = formData.get('title');
+	const description = formData.get('description');
+
+	if (typeof title !== 'string' || title.trim().length === 0) {
+		return { success: false, error: 'Title is required' };
 	}
 
 	await prisma.task.create({
 		data: {
 			title,
-			description: input.description ?? null,
-			userId: session.user.id,
+			description: typeof description === 'string' ? description : null,
+			userId,
 		},
 	});
 
 	revalidatePath('/dashboard/tasks');
+
+	return { success: true };
 }
 
-export async function deleteTask(taskId: string): Promise<void> {
-	const session = await auth();
-
-	if (!session?.user?.id) {
-		throw new Error('Unauthorized');
-	}
+// delete task
+export async function deleteTask(taskId: string): Promise<ActionResult> {
+	const userId = await requireUser();
 
 	await prisma.task.deleteMany({
 		where: {
 			id: taskId,
-			userId: session.user.id,
+			userId,
 		},
 	});
 
 	revalidatePath('/dashboard/tasks');
+
+	return { success: true };
 }
 
-export async function updateTaskStatus(taskId: string, status: TaskStatus): Promise<void> {
-	const session = await auth();
-
-	if (!session?.user?.id) {
-		throw new Error('Unauthorized');
-	}
+// update task status
+export async function updateTaskStatus(taskId: string, status: TaskStatus): Promise<ActionResult> {
+	const userId = await requireUser();
 
 	await prisma.task.updateMany({
 		where: {
 			id: taskId,
-			userId: session.user.id,
+			userId,
 		},
 		data: {
 			status,
@@ -69,4 +76,6 @@ export async function updateTaskStatus(taskId: string, status: TaskStatus): Prom
 	});
 
 	revalidatePath('/dashboard/tasks');
+
+	return { success: true };
 }
