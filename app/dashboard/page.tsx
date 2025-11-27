@@ -6,7 +6,7 @@ async function DashboardPage() {
 
 	return (
 		<div className="p-8">
-			<h1 className="text-2xl font-semibold">Welcome, {session?.user?.email}</h1>
+			<h1 className="text-2xl font-semibold">Hurrayyyy {session?.user?.email}</h1>
 			<p className="text-muted-foreground">Tasks will appear below.</p>
 		</div>
 	);

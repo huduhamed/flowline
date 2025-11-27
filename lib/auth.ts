@@ -6,7 +6,8 @@ import { compare } from 'bcrypt';
 // internal imports
 import { prisma } from './prisma';
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// Centralize auth options so we can reuse them for getServerSession
+export const authOptions = {
 	adapter: PrismaAdapter(prisma),
 	providers: [
 		CredentialsProvider({
@@ -36,4 +37,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		strategy: 'jwt',
 	},
 	secret: process.env.NEXTAUTH_SECRET,
-});
+} as const;
+
+// Initialize NextAuth handler — this returns the route handler function/object
+const nextAuthHandler = NextAuth(authOptions as any) as any;
+
+// Export handlers for the API route file to destructure (GET, POST)
+export const handlers = nextAuthHandler;
+
+// Provide a stable `auth()` helper that server components and APIs can call to
+// get the current session. Use `getServerSession` from next-auth if available.
+export async function auth() {
+	try {
+		const { getServerSession } = await import('next-auth/next');
+		const session = await getServerSession(authOptions as any);
+		return session;
+	} catch (err) {
+		// If getServerSession isn't available or fails, return null rather than
+		// letting the import crash the server.
+		// eslint-disable-next-line no-console
+		console.error('getServerSession error:', err);
+		return null;
+	}
+}
+
+// Forward signIn/signOut if provided by the handler; otherwise export placeholders
+export const signIn = (nextAuthHandler?.signIn ?? (async () => {
+	throw new Error('signIn is not available in this environment');
+})) as any;
+
+export const signOut = (nextAuthHandler?.signOut ?? (async () => {
+	throw new Error('signOut is not available in this environment');
+})) as any;
