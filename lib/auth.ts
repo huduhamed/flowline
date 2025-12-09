@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth';
+import type { Session } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcrypt';
@@ -47,10 +48,10 @@ export const handlers = nextAuthHandler;
 
 // Provide a stable `auth()` helper that server components and APIs can call to
 // get the current session. Use `getServerSession` from next-auth if available.
-export async function auth() {
+export async function auth(): Promise<Session | null> {
 	try {
 		const { getServerSession } = await import('next-auth/next');
-		const session = await getServerSession(authOptions as any);
+		const session = (await getServerSession(authOptions as any)) as Session | null;
 		return session;
 	} catch (err) {
 		// If getServerSession isn't available or fails, return null rather than
@@ -62,10 +63,12 @@ export async function auth() {
 }
 
 // Forward signIn/signOut if provided by the handler; otherwise export placeholders
-export const signIn = (nextAuthHandler?.signIn ?? (async () => {
-	throw new Error('signIn is not available in this environment');
-})) as any;
+export const signIn = (nextAuthHandler?.signIn ??
+	(async () => {
+		throw new Error('signIn is not available in this environment');
+	})) as any;
 
-export const signOut = (nextAuthHandler?.signOut ?? (async () => {
-	throw new Error('signOut is not available in this environment');
-})) as any;
+export const signOut = (nextAuthHandler?.signOut ??
+	(async () => {
+		throw new Error('signOut is not available in this environment');
+	})) as any;
