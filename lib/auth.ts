@@ -40,29 +40,23 @@ export const authOptions = {
 	secret: process.env.NEXTAUTH_SECRET,
 } as const;
 
-// Initialize NextAuth handler — this returns the route handler function/object
 const nextAuthHandler = NextAuth(authOptions as any) as any;
 
-// Export handlers for the API route file to destructure (GET, POST)
 export const handlers = nextAuthHandler;
 
-// Provide a stable `auth()` helper that server components and APIs can call to
-// get the current session. Use `getServerSession` from next-auth if available.
+// auth
 export async function auth(): Promise<Session | null> {
 	try {
 		const { getServerSession } = await import('next-auth/next');
 		const session = (await getServerSession(authOptions as any)) as Session | null;
 		return session;
 	} catch (err) {
-		// If getServerSession isn't available or fails, return null rather than
-		// letting the import crash the server.
-		// eslint-disable-next-line no-console
 		console.error('getServerSession error:', err);
 		return null;
 	}
 }
 
-// Forward signIn/signOut if provided by the handler; otherwise export placeholders
+// signIn/signOut
 export const signIn = (nextAuthHandler?.signIn ??
 	(async () => {
 		throw new Error('signIn is not available in this environment');
