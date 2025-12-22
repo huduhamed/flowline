@@ -1,36 +1,29 @@
-'use client';
+'use server';
 
-// internal imports
-import { signInUser } from '@/actions/auth';
+import { signIn } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
-function SignIn() {
-	return (
-		<div className="max-w-sm mx-auto mt-20">
-			<h1 className="text-xl font-semibold mb-4">Login</h1>
+// sign in page
+export async function signInUser(formData: FormData) {
+	const email = formData.get('email');
+	const password = formData.get('password');
 
-			<form action={signInUser} className="space-y-4">
-				<input
-					name="email"
-					type="email"
-					placeholder="Email"
-					className="w-full border rounded p-2"
-					required
-				/>
+	// if not email or password
+	if (!email || !password) {
+		throw new Error('Missing credentials');
+	}
 
-				<input
-					name="password"
-					type="password"
-					placeholder="Password"
-					className="w-full border rounded p-2"
-					required
-				/>
+	try {
+		await signIn('credentials', {
+			email,
+			password,
+			redirect: false,
+		});
+	} catch (error) {
+		return {
+			error: 'Invalid email or password',
+		};
+	}
 
-				<button type="submit" className="w-full bg-black text-white rounded p-2">
-					Login
-				</button>
-			</form>
-		</div>
-	);
+	redirect('/dashboard');
 }
-
-export default SignIn;

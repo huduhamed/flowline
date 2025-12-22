@@ -1,6 +1,5 @@
 'use client';
 
-import { Cardo } from 'next/font/google';
 import { useMemo, useState } from 'react';
 
 // types
