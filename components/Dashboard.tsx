@@ -22,8 +22,18 @@ type Order = {
 };
 
 // dashboard
+type User = {
+	name: string;
+	email: string;
+};
+
 export default function Dashboard() {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
+
+	const user: User = {
+		name: 'John Doe',
+		email: 'john@example.com',
+	};
 
 	const metrics = useMemo<Metric[]>(
 		() => [
@@ -62,7 +72,7 @@ export default function Dashboard() {
 			<Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen((s) => !s)} />
 
 			<div className="flex-1 flex flex-col">
-				<TopNav onToggleSidebar={() => setSidebarOpen((s) => !s)} />
+				<TopNav onToggleSidebar={() => setSidebarOpen((s) => !s)} user={user} />
 
 				<main className="p-6 space-y-6 overflow-auto">
 					<MetricsGrid metrics={metrics} />
@@ -80,30 +90,6 @@ export default function Dashboard() {
 		</div>
 	);
 }
-
-// // top nav
-// function TopNav({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-// 	return (
-// 		<header className="px-6 py-4 bg-white border-b flex items-center justify-between">
-// 			<button
-// 				className="md:hidden p-2 rounded hover:bg-gray-100"
-// 				onClick={onToggleSidebar}
-// 				aria-label="Open sidebar"
-// 			/>
-
-// 			<input
-// 				placeholder="Search…"
-// 				className="border rounded-md px-3 py-2 text-sm w-72"
-// 				aria-label="Search"
-// 			/>
-
-// 			<div className="flex items-center gap-3">
-// 				<div className="w-8 h-8 rounded-full bg-gray-300" />
-// 				<span className="text-sm font-medium">Hud</span>
-// 			</div>
-// 		</header>
-// 	);
-// }
 
 // metrics grid
 function MetricsGrid({ metrics }: { metrics: Metric[] }) {
