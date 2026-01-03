@@ -2,10 +2,10 @@
 
 import { redirect } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { hash, compare } from 'bcryptjs';
+import { hash } from 'bcryptjs';
 
 // fix later
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 export async function signUpUser(formData: FormData) {
 	const email = formData.get('email');
@@ -16,7 +16,7 @@ export async function signUpUser(formData: FormData) {
 	}
 
 	// check if user exists
-	const existingUser = await db.user.findUnique({
+	const existingUser = await prisma.user.findUnique({
 		where: { email: email.toString() },
 	});
 
@@ -30,7 +30,7 @@ export async function signUpUser(formData: FormData) {
 	const hashedPassword = await hash(password.toString(), 12);
 
 	// Create user
-	await db.user.create({
+	await prisma.user.create({
 		data: {
 			email: email.toString(),
 			password: hashedPassword,
