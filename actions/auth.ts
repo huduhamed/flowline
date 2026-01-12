@@ -12,7 +12,7 @@ export async function signUpUser(formData: FormData) {
 	const email = formData.get('email') as string;
 	const password = formData.get('password') as string;
 
-	if (!email || !password) return;
+	if (!email || !password) return 'Please enter your credentials correctly.';
 
 	const existing = await prisma.user.findUnique({ where: { email } });
 	if (existing) throw new Error('Email already exists');
