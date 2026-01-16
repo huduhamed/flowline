@@ -7,6 +7,16 @@ import { compare } from 'bcrypt';
 // internal imports
 import { prisma } from './prisma';
 
+// extend the session type to include user
+declare module 'next-auth' {
+	interface Session {
+		user: {
+			id: string;
+			email: string;
+		};
+	}
+}
+
 // Centralize auth options so we can reuse them for getServerSession
 export const authOptions = {
 	adapter: PrismaAdapter(prisma),
@@ -36,6 +46,22 @@ export const authOptions = {
 	],
 	session: {
 		strategy: 'jwt',
+	},
+	callbacks: {
+		async jwt({ token, user }: { token: any; user?: any }) {
+			if (user) {
+				token.id = user.id;
+				token.email = user.email;
+			}
+			return token;
+		},
+		async session({ session, token }: { session: Session; token: any }) {
+			if (session.user) {
+				session.user.id = token.id as string;
+				session.user.email = token.email as string;
+			}
+			return session;
+		},
 	},
 	secret: process.env.NEXTAUTH_SECRET,
 } as const;
