@@ -1,10 +1,9 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
+import { auth } from '@/lib/auth';
 
 // internal imports
 import Dashboard from '@/components/Dashboard';
-import { authOptions } from '@/lib/auth';
 
 type Metric = {
 	id: string;
@@ -44,9 +43,9 @@ async function getOrders(): Promise<Order[]> {
 
 // page
 export default async function DashboardPage() {
-	const session = await getServerSession(authOptions);
+	const session = await auth();
 
-	if (!session) {
+	if (!session?.user) {
 		redirect('/signin');
 	}
 
