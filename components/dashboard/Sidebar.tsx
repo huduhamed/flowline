@@ -1,5 +1,13 @@
+import Link from 'next/link';
+
 // sidebar
 export function Sidebar({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+	const navItems = [
+		{ label: 'Dashboard', href: '/dashboard' },
+		{ label: 'Tasks', href: '/dashboard/tasks' },
+		{ label: 'Profile', href: '/dashboard/profile' },
+	];
+
 	return (
 		<aside
 			aria-label="Sidebar"
@@ -23,20 +31,22 @@ export function Sidebar({ open, onToggle }: { open: boolean; onToggle: () => voi
 				</div>
 
 				<nav className="flex-1 px-2 space-y-1">
-					{['Overview', 'Analytics', 'Orders', 'Products'].map((item) => (
-						<a
-							key={item}
-							href="#"
-							className="flex items-center gap-3 p-2 rounded hover:bg-gray-100"
+					{navItems.map((item) => (
+						<Link
+							key={item.href}
+							href={item.href}
+							className="flex items-center gap-3 p-2 rounded hover:bg-gray-100 text-sm"
 						>
-							<span className="w-5 h-5 bg-gray-200 rounded" />
-							{open && <span className="text-sm">{item}</span>}
-						</a>
+							{open && <span>{item.label}</span>}
+							{!open && <span title={item.label}>•</span>}
+						</Link>
 					))}
 				</nav>
 
 				<div className="p-4 border-t">
-					<button className="w-full bg-indigo-600 text-white py-2 rounded text-sm">Create</button>
+					{open && (
+						<p className="text-xs text-gray-500 mb-2">Quick actions</p>
+					)}
 				</div>
 			</div>
 		</aside>
