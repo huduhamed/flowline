@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 // internal imports
 import { updateUserProfile } from '@/actions/auth';
+import { useToast } from '@/lib/toast-context';
 
 type ProfileFormProps = {
 	user: {
@@ -16,22 +17,28 @@ type ProfileFormProps = {
 function ProfileForm({ user }: ProfileFormProps) {
 	const [name, setName] = useState(user.name || '');
 	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+	const { addToast } = useToast();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
-		setMessage(null);
+
+		// validation
+		if (!name.trim()) {
+			addToast('Please enter a name', 'error');
+			setLoading(false);
+			return;
+		}
 
 		try {
 			const result = await updateUserProfile({ name: name.trim() });
 			if (result.success) {
-				setMessage({ type: 'success', text: 'Profile updated successfully!' });
+				addToast('Profile updated successfully!', 'success');
 			} else {
-				setMessage({ type: 'error', text: result.error || 'Failed to update profile' });
+				addToast(result.error || 'Failed to update profile', 'error');
 			}
 		} catch {
-			setMessage({ type: 'error', text: 'An unexpected error occurred' });
+			addToast('An unexpected error occurred', 'error');
 		} finally {
 			setLoading(false);
 		}
@@ -60,18 +67,6 @@ function ProfileForm({ user }: ProfileFormProps) {
 					className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 			</div>
-
-			{message && (
-				<div
-					className={`p-3 rounded-md text-sm ${
-						message.type === 'success'
-							? 'bg-green-50 text-green-800 border border-green-200'
-							: 'bg-red-50 text-red-800 border border-red-200'
-					}`}
-				>
-					{message.text}
-				</div>
-			)}
 
 			<button
 				type="submit"

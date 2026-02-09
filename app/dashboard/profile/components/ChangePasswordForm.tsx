@@ -4,25 +4,25 @@ import { useState } from 'react';
 
 // internal imports
 import { changePassword } from '@/actions/auth';
+import { useToast } from '@/lib/toast-context';
 
 function ChangePasswordForm() {
 	const [currentPassword, setCurrentPassword] = useState('');
 	const [newPassword, setNewPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+	const { addToast } = useToast();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setMessage(null);
 
 		if (newPassword !== confirmPassword) {
-			setMessage({ type: 'error', text: 'New passwords do not match' });
+			addToast('New passwords do not match', 'error');
 			return;
 		}
 
 		if (newPassword.length < 6) {
-			setMessage({ type: 'error', text: 'Password must be at least 6 characters' });
+			addToast('Password must be at least 6 characters', 'error');
 			return;
 		}
 
@@ -34,15 +34,15 @@ function ChangePasswordForm() {
 				newPassword,
 			});
 			if (result.success) {
-				setMessage({ type: 'success', text: 'Password changed successfully!' });
+				addToast('Password changed successfully!', 'success');
 				setCurrentPassword('');
 				setNewPassword('');
 				setConfirmPassword('');
 			} else {
-				setMessage({ type: 'error', text: result.error || 'Failed to change password' });
+				addToast(result.error || 'Failed to change password', 'error');
 			}
 		} catch {
-			setMessage({ type: 'error', text: 'An unexpected error occurred' });
+			addToast('An unexpected error occurred', 'error');
 		} finally {
 			setLoading(false);
 		}
@@ -82,18 +82,6 @@ function ChangePasswordForm() {
 					className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 				/>
 			</div>
-
-			{message && (
-				<div
-					className={`p-3 rounded-md text-sm ${
-						message.type === 'success'
-							? 'bg-green-50 text-green-800 border border-green-200'
-							: 'bg-red-50 text-red-800 border border-red-200'
-					}`}
-				>
-					{message.text}
-				</div>
-			)}
 
 			<button
 				type="submit"
