@@ -49,47 +49,65 @@ function ChangePasswordForm() {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+		<form onSubmit={handleSubmit} className="space-y-6 max-w-md">
 			<div>
-				<label className="block text-sm font-medium mb-2">Current Password</label>
+				<label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
 				<input
 					type="password"
 					value={currentPassword}
 					onChange={(e) => setCurrentPassword(e.target.value)}
 					required
-					className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					placeholder="••••••••"
+					className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
 				/>
 			</div>
 
 			<div>
-				<label className="block text-sm font-medium mb-2">New Password</label>
+				<label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
 				<input
 					type="password"
 					value={newPassword}
 					onChange={(e) => setNewPassword(e.target.value)}
 					required
-					className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					placeholder="••••••••"
+					className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
 				/>
+				<p className="text-xs text-gray-500 mt-2">At least 6 characters</p>
 			</div>
 
 			<div>
-				<label className="block text-sm font-medium mb-2">Confirm Password</label>
+				<label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
 				<input
 					type="password"
 					value={confirmPassword}
 					onChange={(e) => setConfirmPassword(e.target.value)}
 					required
-					className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					placeholder="••••••••"
+					className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
 				/>
 			</div>
 
-			<button
-				type="submit"
-				disabled={loading}
-				className="px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-			>
-				{loading ? 'Changing...' : 'Change Password'}
-			</button>
+			<div className="flex gap-3 pt-2">
+				<button
+					type="submit"
+					disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+					className="px-6 py-2.5 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+				>
+					{loading ? 'Changing...' : 'Change Password'}
+				</button>
+				<button
+					type="button"
+					onClick={() => {
+						setCurrentPassword('');
+						setNewPassword('');
+						setConfirmPassword('');
+					}}
+					disabled={loading}
+					className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+				>
+					Cancel
+				</button>
+			</div>
 		</form>
 	);
 }

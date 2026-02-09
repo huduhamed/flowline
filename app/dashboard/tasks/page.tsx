@@ -12,7 +12,7 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 	const session = await auth();
 	if (!session?.user?.id) return null;
 
-	// Server-side filtering
+	// server-side filtering
 	const where: any = { userId: session.user.id };
 	if (searchParams.status && ['TODO', 'IN_PROGRESS', 'DONE'].includes(searchParams.status)) {
 		where.status = searchParams.status;
@@ -30,8 +30,11 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 	});
 
 	return (
-		<div className="p-6">
-			<h1 className="text-xl font-semibold mb-6">Tasks</h1>
+		<div className="p-6 max-w-6xl mx-auto">
+			<div className="mb-8">
+				<h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
+				<p className="text-gray-600">Organize and track your work</p>
+			</div>
 			<TasksClient initialTasks={tasks as unknown as ClientTask[]} />
 		</div>
 	);

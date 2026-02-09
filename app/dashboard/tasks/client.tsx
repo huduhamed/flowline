@@ -108,37 +108,75 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 	};
 
 	return (
-		<div>
-			<div className="flex items-center justify-between mb-4 gap-4">
-				<div className="flex gap-2 items-center">
-					<div className="flex rounded-md overflow-hidden border">
-						{(['ALL', 'TODO', 'IN_PROGRESS', 'DONE'] as const).map((s) => (
-							<button
-								key={s}
-								onClick={() => setStatusFilter(s)}
-								className={`px-3 py-1 text-sm ${
-									statusFilter === s ? 'bg-black text-white' : 'bg-white'
-								}`}
-							>
-								{s === 'ALL' ? 'All' : s.replace('_', ' ')}
-							</button>
-						))}
+		<div className="space-y-6">
+			{/* header with filters and search */}
+			<div className="bg-white rounded-lg border border-gray-200 p-4">
+				<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+					{/* Filters */}
+					<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
+						<div className="flex rounded-lg overflow-hidden border border-gray-300 bg-white">
+							{(['ALL', 'TODO', 'IN_PROGRESS', 'DONE'] as const).map((s) => (
+								<button
+									key={s}
+									onClick={() => setStatusFilter(s)}
+									className={`px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap ${
+										statusFilter === s
+											? 'bg-blue-600 text-white'
+											: 'bg-white text-gray-700 hover:bg-gray-50'
+									}`}
+								>
+									{s === 'ALL' ? 'All Tasks' : s.replace(/_/g, ' ')}
+								</button>
+							))}
+						</div>
+
+						<input
+							placeholder="Search tasks..."
+							value={query}
+							onChange={(e) => setQuery(e.target.value)}
+							className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+						/>
 					</div>
 
-					<input
-						placeholder="Search tasks..."
-						value={query}
-						onChange={(e) => setQuery(e.target.value)}
-						className="border rounded px-3 py-2 ml-3"
-					/>
+					{/* new task button */}
+					<button
+						onClick={() => setModalOpen(true)}
+						className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors whitespace-nowrap w-full sm:w-auto"
+					>
+						+ New Task
+					</button>
 				</div>
+			</div>
 
-				<button
-					onClick={() => setModalOpen(true)}
-					className="px-3 py-1 rounded bg-black text-white"
-				>
-					New Task
-				</button>
+			{/* task list or empty state */}
+			<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+				{visibleTasks.length === 0 ? (
+					<div className="p-12 text-center">
+						<div className="text-4xl mb-4">📋</div>
+						<h3 className="text-lg font-semibold text-gray-900 mb-2">
+							{tasks.length === 0 ? 'No tasks yet' : 'No tasks found'}
+						</h3>
+						<p className="text-sm text-gray-600 mb-6">
+							{tasks.length === 0
+								? 'Create your first task to get started'
+								: 'Try adjusting your filters or search'}
+						</p>
+						{tasks.length === 0 && (
+							<button
+								onClick={() => setModalOpen(true)}
+								className="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+							>
+								Create First Task
+							</button>
+						)}
+					</div>
+				) : (
+					<TaskList
+						tasks={visibleTasks}
+						onDeleteLocal={handleDeleteLocal}
+						onStatusChange={handleStatusChange}
+					/>
+				)}
 			</div>
 
 			<CreateTaskModal
@@ -147,12 +185,6 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 				onAddOptimistic={addOptimistic}
 				onReplaceTemp={replaceTemp}
 				onRollback={rollback}
-			/>
-
-			<TaskList
-				tasks={visibleTasks}
-				onDeleteLocal={handleDeleteLocal}
-				onStatusChange={handleStatusChange}
 			/>
 		</div>
 	);
