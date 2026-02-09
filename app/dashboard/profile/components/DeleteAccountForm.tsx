@@ -39,49 +39,54 @@ function DeleteAccountForm() {
 	if (!showConfirmation) {
 		return (
 			<div>
-				<p className="text-sm text-gray-600 mb-4">
+				<p className="text-sm text-red-700 mb-4">
 					Once you delete your account, there is no going back. Please be certain.
 				</p>
 				<button
 					type="button"
 					onClick={() => setShowConfirmation(true)}
-					className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700"
+					className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200"
 				>
-					Delete Account
+					Delete My Account
 				</button>
 			</div>
 		);
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-			<p className="text-sm text-gray-600">
-				Type <strong>DELETE MY ACCOUNT</strong> below to confirm deletion:
-			</p>
+		<form onSubmit={handleSubmit} className="space-y-6 max-w-md">
+			<div className="bg-red-100 border border-red-300 rounded-lg p-4">
+				<p className="text-sm text-red-900">
+					Type <strong className="font-semibold">DELETE MY ACCOUNT</strong> in the field below to
+					confirm. This action cannot be undone.
+				</p>
+			</div>
 
 			<input
 				type="text"
 				value={confirmText}
 				onChange={(e) => setConfirmText(e.target.value)}
 				placeholder="DELETE MY ACCOUNT"
-				className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+				maxLength={20}
+				className="w-full px-4 py-3 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 font-mono"
 			/>
 
-			<div className="flex gap-2">
+			<div className="flex gap-3">
 				<button
 					type="button"
 					onClick={() => {
 						setShowConfirmation(false);
 						setConfirmText('');
 					}}
-					className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
+					disabled={loading}
+					className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
 				>
 					Cancel
 				</button>
 				<button
 					type="submit"
 					disabled={loading || confirmText !== 'DELETE MY ACCOUNT'}
-					className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+					className="px-6 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
 				>
 					{loading ? 'Deleting...' : 'Delete Account'}
 				</button>

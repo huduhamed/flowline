@@ -28,7 +28,7 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 		e.preventDefault();
 		const trimmed = title.trim();
 
-		// Validation
+		// validation
 		if (!trimmed) {
 			addToast('Task title is required', 'error');
 			return;
@@ -54,7 +54,7 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 
 		// show immediate optimistic entry
 		onAddOptimistic(optimistic);
-		onClose(); // hide modal quickly
+		onClose();
 
 		// send request in background
 		startTransition(async () => {
@@ -89,55 +89,87 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 		<div
 			role="dialog"
 			aria-modal="true"
-			className="fixed inset-0 z-50 flex items-center justify-center"
+			className="fixed inset-0 z-50 flex items-center justify-center p-4"
 		>
-			<div className="absolute inset-0 bg-black/40" onClick={onClose} />
+			{/* backdrop */}
+			<div
+				className="absolute inset-0 bg-black/50 transition-opacity"
+				onClick={onClose}
+				aria-hidden="true"
+			/>
 
+			{/* modal */}
 			<form
 				onSubmit={handleSubmit}
-				className="relative z-10 w-full max-w-lg bg-white dark:bg-slate-900 rounded-lg p-6 shadow-lg"
+				className="relative z-10 w-full max-w-lg bg-white rounded-lg p-6 shadow-xl animate-in scale-95 fade-in duration-200"
 				aria-label="Create task"
 			>
-				<h2 className="text-lg font-semibold mb-4">New Task</h2>
-
-				<label className="block mb-3">
-					<span className="text-sm font-medium">Title</span>
-					<input
-						value={title}
-						onChange={(e) => setTitle(e.target.value)}
-						placeholder="Task title"
-						className="mt-1 block w-full border rounded px-3 py-2"
-						required
-						autoFocus
-					/>
-				</label>
-
-				<label className="block mb-4">
-					<span className="text-sm font-medium">Description (optional)</span>
-					<input
-						value={description}
-						onChange={(e) => setDescription(e.target.value)}
-						placeholder="Short description"
-						className="mt-1 block w-full border rounded px-3 py-2"
-					/>
-				</label>
-
-				<div className="flex justify-end gap-2">
+				<div className="flex items-center justify-between mb-6">
+					<h2 className="text-xl font-bold text-gray-900">Create New Task</h2>
 					<button
 						type="button"
 						onClick={onClose}
-						className="px-4 py-2 rounded border"
+						className="text-gray-400 hover:text-gray-600 transition-colors"
+						aria-label="Close"
+					>
+						<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				</div>
+
+				<div className="space-y-4 mb-6">
+					<div>
+						<label className="block text-sm font-medium text-gray-900 mb-2">Task Title *</label>
+						<input
+							value={title}
+							onChange={(e) => setTitle(e.target.value)}
+							placeholder="What needs to be done?"
+							className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+							required
+							autoFocus
+							maxLength={500}
+						/>
+						<p className="mt-1 text-xs text-gray-500">{title.length}/500</p>
+					</div>
+
+					<div>
+						<label className="block text-sm font-medium text-gray-900 mb-2">
+							Description (optional)
+						</label>
+						<textarea
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+							placeholder="Add more details about this task..."
+							className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+							rows={3}
+							maxLength={1000}
+						/>
+						<p className="mt-1 text-xs text-gray-500">{description.length}/1000</p>
+					</div>
+				</div>
+
+				<div className="flex justify-end gap-3">
+					<button
+						type="button"
+						onClick={onClose}
 						disabled={isPending}
+						className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 					>
 						Cancel
 					</button>
 
 					<button
 						type="submit"
-						className="px-4 py-2 rounded bg-black text-white"
+						className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 						disabled={isPending}
 					>
-						{isPending ? 'Adding…' : 'Add Task'}
+						{isPending ? 'Creating…' : 'Create Task'}
 					</button>
 				</div>
 			</form>
