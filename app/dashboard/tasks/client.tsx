@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+// internal imports
 import type { ClientTask } from './types';
 import TaskList from './components/TaskList';
 import CreateTaskModal from './components/CreateTaskModal';
 import { useDebouncedValue } from './hooks/useDebouncedValue';
 import type { TaskStatus } from '@prisma/client';
+import { useToast } from '@/lib/toast-context';
 
 type Props = {
 	initialTasks: ClientTask[];
@@ -16,21 +19,22 @@ type Props = {
 export default function TasksClient({ initialTasks, initialFilters }: Props) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { addToast } = useToast();
 
-	// Initialize filters
+	// initialize filters
 	const initialQ = initialFilters?.q ?? searchParams?.get('q') ?? '';
 	const initialStatus = initialFilters?.status ?? searchParams?.get('status') ?? 'ALL';
 
 	const [tasks, setTasks] = useState<ClientTask[]>(initialTasks);
 	const [modalOpen, setModalOpen] = useState(false);
 
-	// Filters
+	// filters
 	const [query, setQuery] = useState<string>(initialQ);
 	const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
 
 	const debouncedQuery = useDebouncedValue(query, 300);
 
-	// Keep URL in sync
+	// keep URL in sync
 	useEffect(() => {
 		const params = new URLSearchParams();
 		if (statusFilter && statusFilter !== 'ALL') params.set('status', statusFilter);
@@ -66,9 +70,14 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 		(async () => {
 			try {
 				const res = await fetch(`/api/tasks?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
-				if (!res.ok) throw new Error('delete failed');
+				if (!res.ok) {
+					const error = await res.json().catch(() => null);
+					throw new Error(error?.error || 'Failed to delete task');
+				}
+				addToast('Task deleted successfully', 'success');
 			} catch (err) {
 				console.error(err);
+				addToast(err instanceof Error ? err.message : 'Failed to delete task', 'error');
 				setTasks(previous);
 			}
 		})();
@@ -85,9 +94,14 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ id, status }),
 				});
-				if (!res.ok) throw new Error('update failed');
+				if (!res.ok) {
+					const error = await res.json().catch(() => null);
+					throw new Error(error?.error || 'Failed to update task');
+				}
+				addToast('Task status updated', 'success');
 			} catch (err) {
 				console.error(err);
+				addToast(err instanceof Error ? err.message : 'Failed to update task', 'error');
 				setTasks(previous);
 			}
 		})();

@@ -1,8 +1,11 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+
+// internal imports
 import type { ClientTask } from '../types';
 import { tempId } from '../utils';
+import { useToast } from '@/lib/toast-context';
 
 type Props = {
 	open: boolean;
@@ -13,23 +16,28 @@ type Props = {
 	onRollback: (tempId: string) => void;
 };
 
-export default function CreateTaskModal({
-	open,
-	onClose,
-	onAddOptimistic,
-	onReplaceTemp,
-	onRollback,
-}: Props) {
+function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRollback }: Props) {
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [isPending, startTransition] = useTransition();
+	const { addToast } = useToast();
 
 	if (!open) return null;
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		const trimmed = title.trim();
-		if (!trimmed) return;
+
+		// Validation
+		if (!trimmed) {
+			addToast('Task title is required', 'error');
+			return;
+		}
+
+		if (trimmed.length > 500) {
+			addToast('Task title must be less than 500 characters', 'error');
+			return;
+		}
 
 		const id = tempId();
 		const nowIso = new Date().toISOString();
@@ -44,7 +52,7 @@ export default function CreateTaskModal({
 			updatedAt: nowIso,
 		};
 
-		// Show immediate optimistic entry
+		// show immediate optimistic entry
 		onAddOptimistic(optimistic);
 		onClose(); // hide modal quickly
 
@@ -58,13 +66,16 @@ export default function CreateTaskModal({
 				});
 
 				if (!res.ok) {
-					throw new Error('Failed to create task');
+					const error = await res.json().catch(() => null);
+					throw new Error(error?.error || 'Failed to create task');
 				}
 
 				const serverTask = (await res.json()) as ClientTask;
 				onReplaceTemp(id, serverTask);
+				addToast('Task created successfully', 'success');
 			} catch (err) {
 				console.error('Create task failed:', err);
+				addToast(err instanceof Error ? err.message : 'Failed to create task', 'error');
 				onRollback(id);
 			} finally {
 				// reset form values
@@ -133,3 +144,5 @@ export default function CreateTaskModal({
 		</div>
 	);
 }
+
+export default CreateTaskModal;
