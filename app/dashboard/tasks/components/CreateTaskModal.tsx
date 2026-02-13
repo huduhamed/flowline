@@ -1,11 +1,18 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 
 // internal imports
-import type { ClientTask } from '../types';
+import type { ClientTask, TaskPriority } from '../types';
 import { tempId } from '../utils';
 import { useToast } from '@/lib/toast-context';
+import { getUserTags } from '@/actions/tasks';
+
+type Tag = {
+	id: string;
+	name: string;
+	color: string;
+};
 
 type Props = {
 	open: boolean;
@@ -19,8 +26,23 @@ type Props = {
 function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRollback }: Props) {
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
+	const [priority, setPriority] = useState<TaskPriority>('MEDIUM');
+	const [dueDate, setDueDate] = useState('');
+	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [availableTags, setAvailableTags] = useState<Tag[]>([]);
 	const [isPending, startTransition] = useTransition();
 	const { addToast } = useToast();
+
+	useEffect(() => {
+		if (open) {
+			// Load available tags
+			getUserTags().then((result) => {
+				if (result.success && result.tags) {
+					setAvailableTags(result.tags);
+				}
+			});
+		}
+	}, [open]);
 
 	if (!open) return null;
 
@@ -47,6 +69,8 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 			title: trimmed,
 			description: description || null,
 			status: 'TODO',
+			priority,
+			dueDate: dueDate ? new Date(dueDate).toISOString() : null,
 			userId: '',
 			createdAt: nowIso,
 			updatedAt: nowIso,
@@ -62,7 +86,13 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 				const res = await fetch('/api/tasks', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ title: trimmed, description: description || null }),
+					body: JSON.stringify({
+						title: trimmed,
+						description: description || null,
+						priority,
+						dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+						tagIds: selectedTags,
+					}),
 				});
 
 				if (!res.ok) {
@@ -81,8 +111,26 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 				// reset form values
 				setTitle('');
 				setDescription('');
+				setPriority('MEDIUM');
+				setDueDate('');
+				setSelectedTags([]);
 			}
 		});
+	};
+
+	const getPriorityColor = (prio: string) => {
+		switch (prio) {
+			case 'LOW':
+				return 'text-green-600 bg-green-50 border-green-200';
+			case 'MEDIUM':
+				return 'text-blue-600 bg-blue-50 border-blue-200';
+			case 'HIGH':
+				return 'text-amber-600 bg-amber-50 border-amber-200';
+			case 'URGENT':
+				return 'text-red-600 bg-red-50 border-red-200';
+			default:
+				return '';
+		}
 	};
 
 	return (
@@ -101,10 +149,10 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 			{/* modal */}
 			<form
 				onSubmit={handleSubmit}
-				className="relative z-10 w-full max-w-lg bg-white rounded-lg p-6 shadow-xl animate-in scale-95 fade-in duration-200"
+				className="relative z-10 w-full max-w-lg bg-white rounded-lg p-6 shadow-xl animate-in scale-95 fade-in duration-200 max-h-[90vh] overflow-y-auto"
 				aria-label="Create task"
 			>
-				<div className="flex items-center justify-between mb-6">
+				<div className="flex items-center justify-between mb-6 sticky top-0 bg-white">
 					<h2 className="text-xl font-bold text-gray-900">Create New Task</h2>
 					<button
 						type="button"
@@ -123,9 +171,9 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 					</button>
 				</div>
 
-				<div className="space-y-4 mb-6">
+				<div className="space-y-5 mb-6">
 					<div>
-						<label className="block text-sm font-medium text-gray-900 mb-2">Task Title *</label>
+						<label className="block text-sm font-semibold text-gray-900 mb-2">Task Title *</label>
 						<input
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
@@ -139,7 +187,7 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 					</div>
 
 					<div>
-						<label className="block text-sm font-medium text-gray-900 mb-2">
+						<label className="block text-sm font-semibold text-gray-900 mb-2">
 							Description (optional)
 						</label>
 						<textarea
@@ -152,6 +200,70 @@ function CreateTaskModal({ open, onClose, onAddOptimistic, onReplaceTemp, onRoll
 						/>
 						<p className="mt-1 text-xs text-gray-500">{description.length}/1000</p>
 					</div>
+
+					<div className="grid grid-cols-2 gap-4">
+						<div>
+							<label className="block text-sm font-semibold text-gray-900 mb-2">Priority</label>
+							<select
+								value={priority}
+								onChange={(e) =>
+									setPriority(e.target.value as TaskPriority)
+								}
+								className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium transition-all ${getPriorityColor(priority)} border`}
+							>
+								<option value="LOW">Low</option>
+								<option value="MEDIUM">Medium</option>
+								<option value="HIGH">High</option>
+								<option value="URGENT">Urgent</option>
+							</select>
+						</div>
+
+						<div>
+							<label className="block text-sm font-semibold text-gray-900 mb-2">
+								Due Date (optional)
+							</label>
+							<input
+								type="date"
+								value={dueDate}
+								onChange={(e) => setDueDate(e.target.value)}
+								className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+								min={new Date().toISOString().split('T')[0]}
+							/>
+						</div>
+					</div>
+
+					{availableTags.length > 0 && (
+						<div>
+							<label className="block text-sm font-semibold text-gray-900 mb-3">
+								Tags (optional)
+							</label>
+							<div className="flex flex-wrap gap-2">
+								{availableTags.map((tag) => (
+									<button
+										key={tag.id}
+										type="button"
+										onClick={() => {
+											setSelectedTags((prev) =>
+												prev.includes(tag.id)
+													? prev.filter((id) => id !== tag.id)
+													: [...prev, tag.id],
+											);
+										}}
+										className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+											selectedTags.includes(tag.id)
+												? `bg-${tag.color}-600 text-white border border-${tag.color}-700`
+												: `bg-${tag.color}-100 text-${tag.color}-700 border border-${tag.color}-200 hover:bg-${tag.color}-200`
+										}`}
+									>
+										{tag.name}
+									</button>
+								))}
+							</div>
+							<p className="mt-2 text-xs text-gray-500">
+								Selected: {selectedTags.length} {selectedTags.length === 1 ? 'tag' : 'tags'}
+							</p>
+						</div>
+					)}
 				</div>
 
 				<div className="flex justify-end gap-3">

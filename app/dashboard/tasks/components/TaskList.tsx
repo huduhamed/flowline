@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
-import type { ClientTask } from '../types';
+import { Trash2, CheckCircle2, AlertCircle, Clock, Flag, Calendar } from 'lucide-react';
+
+// internal imports
+import type { ClientTask, TaskPriority } from '../types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import type { TaskStatus } from '@prisma/client';
 
@@ -38,6 +40,44 @@ function TaskList({ tasks, onDeleteLocal, onStatusChange }: Props) {
 		}
 	};
 
+	const getPriorityBadge = (priority: TaskPriority | null | undefined) => {
+		if (!priority) return null;
+		const config: Record<TaskPriority, { bg: string; text: string; label: string }> = {
+			LOW: { bg: 'bg-green-100', text: 'text-green-700', label: 'Low' },
+			MEDIUM: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Med' },
+			HIGH: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'High' },
+			URGENT: { bg: 'bg-red-100', text: 'text-red-700', label: 'Urgent' },
+		};
+		const p = config[priority] || config.MEDIUM;
+		return (
+			<span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold ${p.bg} ${p.text}`}>
+				<Flag className="w-3 h-3" />
+				{p.label}
+			</span>
+		);
+	};
+
+	const getDueDate = (task: ClientTask) => {
+		if (!task.dueDate) return null;
+
+		const date = new Date(task.dueDate);
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+		const taskDate = new Date(date);
+		taskDate.setHours(0, 0, 0, 0);
+
+		const isOverdue = taskDate < today && task.status !== 'DONE';
+		const isToday = taskDate.getTime() === today.getTime();
+		const isTomorrow = taskDate.getTime() === new Date(today.getTime() + 86400000).getTime();
+
+		let label = '';
+		if (isToday) label = 'Today';
+		else if (isTomorrow) label = 'Tomorrow';
+		else label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+		return { label, isOverdue, date: date.toLocaleDateString() };
+	};
+
 	if (tasks.length === 0) {
 		return (
 			<div className="text-center py-12">
@@ -49,53 +89,75 @@ function TaskList({ tasks, onDeleteLocal, onStatusChange }: Props) {
 	return (
 		<>
 			<ul className="space-y-3">
-				{tasks.map((task) => (
-					<li
-						key={task.id}
-						className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white group"
-					>
-						<div className="flex justify-between items-start gap-4">
-							<div className="flex-1 min-w-0">
-								<p className="font-medium text-gray-900 truncate">{task.title}</p>
-								{task.description && (
-									<p className="text-sm text-gray-600 line-clamp-2 mt-1">{task.description}</p>
-								)}
-								<div className="flex items-center gap-2 mt-3">
-									<span
-										className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border ${getStatusColor(task.status)}`}
+				{tasks.map((task) => {
+					const dueInfo = getDueDate(task);
+
+					return (
+						<li
+							key={task.id}
+							className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white group"
+						>
+							<div className="flex justify-between items-start gap-4">
+								<div className="flex-1 min-w-0">
+									<p className="font-medium text-gray-900 truncate">{task.title}</p>
+									{task.description && (
+										<p className="text-sm text-gray-600 line-clamp-2 mt-1">{task.description}</p>
+									)}
+
+									{/* Task Meta */}
+									<div className="flex flex-wrap items-center gap-2 mt-3">
+										<span
+											className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium border ${getStatusColor(task.status)}`}
+										>
+											{getStatusIcon(task.status)}
+											{task.status}
+										</span>
+
+										{task.priority && getPriorityBadge(task.priority as TaskPriority)}
+
+										{dueInfo && (
+											<span
+												className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+													dueInfo.isOverdue
+														? 'bg-red-100 text-red-700'
+														: 'bg-gray-100 text-gray-700'
+												}`}
+											>
+												<Calendar className="w-3 h-3" />
+												{dueInfo.label}
+											</span>
+										)}
+
+										<span className="text-xs text-gray-500 ml-auto">
+											{new Date(task.createdAt).toLocaleDateString()}
+										</span>
+									</div>
+								</div>
+
+								<div className="flex gap-2 items-center flex-shrink-0">
+									<select
+										value={task.status}
+										onChange={(e) => onStatusChange?.(task.id, e.target.value as TaskStatus)}
+										className="border border-gray-300 rounded px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
 									>
-										{getStatusIcon(task.status)}
-										{task.status}
-									</span>
-									<span className="text-xs text-gray-500">
-										{new Date(task.createdAt).toLocaleDateString()}
-									</span>
+										<option value="TODO">To Do</option>
+										<option value="IN_PROGRESS">In Progress</option>
+										<option value="DONE">Done</option>
+									</select>
+
+									<button
+										onClick={() => setConfirmDelete(task.id)}
+										className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+										title="Delete task"
+										aria-label="Delete task"
+									>
+										<Trash2 className="w-4 h-4" />
+									</button>
 								</div>
 							</div>
-
-							<div className="flex gap-2 items-center flex-shrink-0">
-								<select
-									value={task.status}
-									onChange={(e) => onStatusChange?.(task.id, e.target.value as TaskStatus)}
-									className="border border-gray-300 rounded px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-gray-400 transition-colors"
-								>
-									<option value="TODO">To Do</option>
-									<option value="IN_PROGRESS">In Progress</option>
-									<option value="DONE">Done</option>
-								</select>
-
-								<button
-									onClick={() => setConfirmDelete(task.id)}
-									className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-									title="Delete task"
-									aria-label="Delete task"
-								>
-									<Trash2 className="w-4 h-4" />
-								</button>
-							</div>
-						</div>
-					</li>
-				))}
+						</li>
+					);
+				})}
 			</ul>
 
 			<ConfirmDialog

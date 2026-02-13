@@ -1,3 +1,4 @@
+// internal imports
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import TasksClient from './client';
@@ -27,6 +28,9 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 	const tasks = await prisma.task.findMany({
 		where,
 		orderBy: { createdAt: 'desc' },
+		include: {
+			tags: true,
+		},
 	});
 
 	return (
