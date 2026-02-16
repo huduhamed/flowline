@@ -14,9 +14,16 @@ import { useToast } from '@/lib/toast-context';
 type Props = {
 	initialTasks: ClientTask[];
 	initialFilters?: { status?: string; q?: string };
+	defaultSortBy?: 'created' | 'dueDate' | 'priority' | 'status';
+	defaultSortOrder?: 'asc' | 'desc';
 };
 
-export default function TasksClient({ initialTasks, initialFilters }: Props) {
+export default function TasksClient({
+	initialTasks,
+	initialFilters,
+	defaultSortBy = 'created',
+	defaultSortOrder = 'desc',
+}: Props) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { addToast } = useToast();
@@ -31,6 +38,10 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 	// filters
 	const [query, setQuery] = useState<string>(initialQ);
 	const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
+	const [sortBy, setSortBy] = useState<'created' | 'dueDate' | 'priority' | 'status'>(
+		defaultSortBy,
+	);
+	const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
 
 	const debouncedQuery = useDebouncedValue(query, 300);
 
@@ -39,11 +50,13 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 		const params = new URLSearchParams();
 		if (statusFilter && statusFilter !== 'ALL') params.set('status', statusFilter);
 		if (debouncedQuery) params.set('q', debouncedQuery);
+		if (sortBy !== 'created') params.set('sortBy', sortBy);
+		if (sortOrder !== 'desc') params.set('sortOrder', sortOrder);
 
 		const pathname = typeof window !== 'undefined' ? window.location.pathname : '/dashboard/tasks';
 
 		router.replace(`${pathname}?${params.toString()}`);
-	}, [statusFilter, debouncedQuery, router]);
+	}, [statusFilter, debouncedQuery, sortBy, sortOrder, router]);
 
 	const addOptimistic = (task: ClientTask) => setTasks((prev) => [task, ...prev]);
 	const replaceTemp = (tempIdStr: string, serverTask: ClientTask) =>
@@ -111,7 +124,7 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 		<div className="space-y-6">
 			{/* header with filters and search */}
 			<div className="bg-white rounded-lg border border-gray-200 p-4">
-				<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+				<div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
 					{/* Filters */}
 					<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
 						<div className="flex rounded-lg overflow-hidden border border-gray-300 bg-white">
@@ -145,6 +158,31 @@ export default function TasksClient({ initialTasks, initialFilters }: Props) {
 					>
 						+ New Task
 					</button>
+				</div>
+
+				{/* Sorting Controls */}
+				<div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+					<label className="text-sm font-medium text-gray-700">Sort by:</label>
+					<div className="flex gap-2 items-center flex-wrap">
+						<select
+							value={sortBy}
+							onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+							className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							<option value="created">Created Date</option>
+							<option value="dueDate">Due Date</option>
+							<option value="priority">Priority</option>
+							<option value="status">Status</option>
+						</select>
+
+						<button
+							onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+							className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors font-medium"
+							title={sortOrder === 'asc' ? 'Click to sort descending' : 'Click to sort ascending'}
+						>
+							{sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+						</button>
+					</div>
 				</div>
 			</div>
 

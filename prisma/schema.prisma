@@ -20,6 +20,20 @@ enum TaskPriority {
   URGENT
 }
 
+enum RecurrencePattern {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum TaskAccessRole {
+  VIEWER
+  EDITOR
+  OWNER
+}
+
 model Task {
   id          String      @id @default(cuid())
   title       String
@@ -28,9 +42,18 @@ model Task {
   priority    TaskPriority @default(MEDIUM)
   dueDate     DateTime?
 
-  tags        Tag[]
+  // Recurring task fields
+  recurrence  RecurrencePattern?
+  recurrenceEndDate DateTime?
+  parentTaskId String?
+  parentTask  Task?       @relation("childTasks", fields: [parentTaskId], references: [id])
+  childTasks  Task[]      @relation("childTasks")
 
-  user        User        @relation(fields: [userId], references: [id])
+  // Relations
+  tags        Tag[]
+  sharedWith  TaskShare[]
+
+  user        User        @relation("ownedTasks", fields: [userId], references: [id], onDelete: Cascade)
   userId      String
 
   createdAt   DateTime @default(now())
@@ -51,6 +74,23 @@ model Tag {
   @@unique([name, userId])
 }
 
+model TaskShare {
+  id        String   @id @default(cuid())
+
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+
+  sharedWith User    @relation("sharedTasks", fields: [sharedWithUserId], references: [id], onDelete: Cascade)
+  sharedWithUserId String
+
+  role      TaskAccessRole @default(VIEWER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([taskId, sharedWithUserId])
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -58,6 +98,9 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  tasks     Task[]
+
+  // Relations
+  ownedTasks    Task[]       @relation("ownedTasks")
+  sharedTasks   TaskShare[]  @relation("sharedTasks")
   tags      Tag[]
 }

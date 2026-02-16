@@ -7,6 +7,8 @@ import type { ClientTask } from './types';
 type SearchParams = {
 	status?: string;
 	q?: string;
+	sortBy?: 'created' | 'dueDate' | 'priority' | 'status';
+	sortOrder?: 'asc' | 'desc';
 };
 
 export default async function Page({ searchParams }: { searchParams: SearchParams }) {
@@ -25,9 +27,28 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 		];
 	}
 
+	// server-side sorting
+	const orderBy: any = {};
+	const sortBy = searchParams.sortBy || 'created';
+	const sortOrder = searchParams.sortOrder || 'desc';
+
+	switch (sortBy) {
+		case 'dueDate':
+			orderBy.dueDate = sortOrder;
+			break;
+		case 'priority':
+			orderBy.priority = sortOrder;
+			break;
+		case 'status':
+			orderBy.status = sortOrder;
+			break;
+		default:
+			orderBy.createdAt = sortOrder;
+	}
+
 	const tasks = await prisma.task.findMany({
 		where,
-		orderBy: { createdAt: 'desc' },
+		orderBy,
 		include: {
 			tags: true,
 		},
@@ -39,7 +60,11 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 				<h1 className="text-3xl font-bold text-gray-900 mb-2">Tasks</h1>
 				<p className="text-gray-600">Organize and track your work</p>
 			</div>
-			<TasksClient initialTasks={tasks as unknown as ClientTask[]} />
+			<TasksClient
+				initialTasks={tasks as unknown as ClientTask[]}
+				defaultSortBy={sortBy}
+				defaultSortOrder={sortOrder}
+			/>
 		</div>
 	);
 }
