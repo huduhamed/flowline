@@ -49,9 +49,6 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
 	const tasks = await prisma.task.findMany({
 		where,
 		orderBy,
-		include: {
-			tags: true,
-		},
 	});
 
 	return (

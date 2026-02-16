@@ -23,13 +23,61 @@ async function requireUser() {
 // 	recipientEmail: string,
 // 	role: TaskAccessRole = 'VIEWER',
 // ): Promise<ActionResult> {
-const userId = await requireUser();
-
-// TODO: Implement after migration
-// try {
-// } catch (error) {}
-return { success: false, error: 'Task sharing not yet available' };
+// 	const userId = await requireUser();
+//
+// 	try {
+// 		// Verify task belongs to user
+// 		const task = await prisma.task.findFirst({
+// 			where: {
+// 				id: taskId,
+// 				userId,
+// 			},
+// 		});
+//
+// 		if (!task) {
+// 			return { success: false, error: 'Task not found' };
+// 		}
+//
+// 		// Find recipient user
+// 		const recipient = await prisma.user.findUnique({
+// 			where: { email: recipientEmail },
+// 		});
+//
+// 		if (!recipient) {
+// 			return { success: false, error: 'User not found' };
+// 		}
+//
+// 		if (recipient.id === userId) {
+// 			return { success: false, error: 'Cannot share task with yourself' };
+// 		}
+//
+// 		// Create or update share
+// 		await prisma.taskShare.upsert({
+// 			where: {
+// 				taskId_sharedWithUserId: {
+// 					taskId,
+// 					sharedWithUserId: recipient.id,
+// 				},
+// 			},
+// 			update: { role },
+// 			create: {
+// 				taskId,
+// 				sharedWithUserId: recipient.id,
+// 				role,
+// 			},
+// 		});
+//
+// 		revalidatePath('/dashboard/tasks');
+// 		return { success: true };
+// 	} catch (error) {
+// 		const message = error instanceof Error ? error.message : 'Failed to share task';
+// 		return { success: false, error: message };
+// 	}
 // }
+
+export async function shareTask(): Promise<ActionResult> {
+	return { success: false, error: 'Task sharing not yet available' };
+}
 
 // TODO: Uncomment after migration
 // export async function unshareTask(taskId: string, recipientUserId: string): Promise<ActionResult> {
