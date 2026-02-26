@@ -31,12 +31,11 @@ export async function POST(req: NextRequest) {
 			title: body.title.trim(),
 			description: body.description ?? null,
 			userId: session.user.id,
-			// TODO: Add these after migration
-			// priority: body.priority || 'MEDIUM',
-			// dueDate: body.dueDate ? new Date(body.dueDate) : null,
-			// tags: body.tagIds && body.tagIds.length > 0 
-			// 	? { connect: body.tagIds.map(id => ({ id })) }
-			// 	: undefined,
+			priority: body.priority || 'MEDIUM',
+			dueDate: body.dueDate ? new Date(body.dueDate) : null,
+			tags: body.tagIds && body.tagIds.length > 0 
+				? { connect: body.tagIds.map(id => ({ id })) }
+				: undefined,
 		},
 	});
 
@@ -78,9 +77,8 @@ export async function PATCH(req: NextRequest) {
 
 	const updateData: Record<string, unknown> = {};
 	if (body.status) updateData.status = body.status;
-	// TODO: Enable after migration
-	// if (body.priority) updateData.priority = body.priority;
-	// if ('dueDate' in body) updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null;
+	if (body.priority) updateData.priority = body.priority;
+	if ('dueDate' in body) updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 
 	const updated = await prisma.task.updateMany({
 		where: { id: body.id, userId: session.user.id },
