@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import type { Task } from '@prisma/client';
+import type { ClientTask } from '../types';
 import { tempId } from '../utils';
 
 type CreateTaskInput = {
@@ -10,8 +10,8 @@ type CreateTaskInput = {
 };
 
 type Props = {
-	onAddOptimistic: (task: Task) => void;
-	onReplaceTemp?: (tempId: string, serverTask: Task) => void;
+	onAddOptimistic: (task: ClientTask) => void;
+	onReplaceTemp?: (tempId: string, serverTask: ClientTask) => void;
 	onRollback?: (tempId: string) => void;
 };
 
@@ -25,14 +25,21 @@ export default function CreateTaskForm({ onAddOptimistic, onReplaceTemp, onRollb
 		const trimmed = title.trim();
 		if (!trimmed) return;
 
-		const tempTask: Task = {
+		const nowIso = new Date().toISOString();
+
+		const tempTask: ClientTask = {
 			id: tempId(),
 			title: trimmed,
 			description: description || null,
 			status: 'TODO',
+			priority: 'MEDIUM',
+			dueDate: null,
+			recurrence: null,
+			recurrenceEndDate: null,
+			parentTaskId: null,
 			userId: '',
-			createdAt: new Date().toISOString() as unknown as Date,
-			updatedAt: new Date().toISOString() as unknown as Date,
+			createdAt: nowIso,
+			updatedAt: nowIso,
 		};
 
 		// show task
@@ -51,7 +58,7 @@ export default function CreateTaskForm({ onAddOptimistic, onReplaceTemp, onRollb
 					throw new Error('Failed to create');
 				}
 
-				const serverTask = (await res.json()) as Task;
+				const serverTask = (await res.json()) as ClientTask;
 				onReplaceTemp?.(tempTask.id, serverTask);
 			} catch (err) {
 				onRollback?.(tempTask.id);

@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth';
 // internal imports
 import Dashboard from '@/components/Dashboard';
 
+export const dynamic = 'force-dynamic';
+
 type Metric = {
 	id: string;
 	title: string;

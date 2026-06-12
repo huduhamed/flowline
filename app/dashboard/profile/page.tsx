@@ -7,6 +7,8 @@ import ProfileForm from './components/ProfileForm';
 import ChangePasswordForm from './components/ChangePasswordForm';
 import DeleteAccountForm from './components/DeleteAccountForm';
 
+export const dynamic = 'force-dynamic';
+
 async function ProfilePage() {
 	const session = await auth();
 	if (!session?.user?.id) {

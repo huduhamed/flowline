@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import TopNav from '@/components/dashboard/TopNav';
 import { Sidebar } from './dashboard/Sidebar';
 
@@ -23,49 +23,19 @@ type Order = {
 
 // dashboard
 type User = {
-	name: string;
-	email: string;
+	name?: string | null;
+	email?: string | null;
+	image?: string | null;
 };
 
-export default function Dashboard() {
+type DashboardProps = {
+	metrics: Metric[];
+	orders: Order[];
+	user: User;
+};
+
+export default function Dashboard({ metrics, orders, user }: DashboardProps) {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
-
-	const user: User = {
-		name: 'John Doe',
-		email: 'john@example.com',
-	};
-
-	const metrics = useMemo<Metric[]>(
-		() => [
-			{ id: 'revenue', title: 'Revenue', value: '$24.6k', change: '+8%' },
-			{ id: 'orders', title: 'Orders', value: '1.2k', change: '+3%' },
-			{ id: 'visitors', title: 'Visitors', value: '9.8k', change: '-1%' },
-			{ id: 'conversion', title: 'Conversion', value: '4.6%', change: '+0.2%' },
-		],
-		[]
-	);
-
-	const orders = useMemo<Order[]>(
-		() => [
-			{
-				id: 1,
-				order: '#1024',
-				customer: 'Alice',
-				date: '2025-11-01',
-				status: 'Paid',
-				total: '$120',
-			},
-			{
-				id: 2,
-				order: '#1023',
-				customer: 'Bob',
-				date: '2025-10-28',
-				status: 'Pending',
-				total: '$80',
-			},
-		],
-		[]
-	);
 
 	return (
 		<div className="min-h-screen flex bg-gray-50">

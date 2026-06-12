@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth';
 import TasksClient from './client';
 import type { ClientTask } from './types';
 
+export const dynamic = 'force-dynamic';
+
 type SearchParams = {
 	status?: string;
 	q?: string;
